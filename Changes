@@ -1,4 +1,8 @@
 Revision history for Perl extension Win32::FindWindow
 
+0.02    Sun Jan 20 10:06:37 2008
+        - fixed: subroutine find_window() and find_windows() is not exported implicitly any longer
+        - fixed: POD
+
 0.01    Sat Jan 19 06:56:40 2008
         - original version

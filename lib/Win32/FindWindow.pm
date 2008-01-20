@@ -13,9 +13,10 @@ __PACKAGE__->mk_ro_accessors(qw(hwnd windowtext classname pid filename basename)
 use constant PROCESS_VM_READ           => 0x0010;
 use constant PROCESS_QUERY_INFORMATION => 0x0400;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
-our @EXPORT = qw(find_window find_windows);
+our @EXPORT = qw();
+our @EXPORT_OK = qw(find_window find_windows);
 our @ARGS_REGEXP = qw(windowtext classname filename basename);
 
 our $ENCODING  = 'cp1252';
@@ -154,75 +155,111 @@ Win32::FindWindow - find windows on Win32 systems
 
 =head1 SYNOPSIS
 
-    use Win32::FindWindow;
+    use Win32::FindWindow qw/find_window find_windows/;
     
-    # find a window with the class name.
-    my $window = find_window( classname => 'ExploreWClass' );
+    $window = find_window();
+    $window = find_window( classname  => 'ExploreWClass' );
+    $window = find_window( basename   => qr/^Explorer.EXE$/
+                         , filename   => qr/^C:\\WINDOWS\\.*/
+                         , windowtext => qr/^C:\\$/
+                         , classname  => qr/^ExploreWClass$/ );
     
-    # basename, filename, windowtext, and classname can be specified.
-    my $window = find_window( basename   => 'Explorer.EXE'
-                            , filename   => 'C:\\WINDOWS\\Explorer.EXE'
-                            , windowtext => 'C:\\'
-                            , classname  => 'ExploreWClass' );
+    @windows = find_windows();
+    @windows = find_windows( windowtext => qr/ - Microsoft Internet Explorer$/ );
+    @windows = find_windows( basename   => 'mspaint.exe'
+                           , filename   => 'C:\\WINDOWS\\system32\\mspaint.exe'
+                           , windowtext => qr/^.+$/
+                           , classname  => 'MSPaintApp' );
     
-    # hwnd and pid can be specified, too.
-    # hwnd defaults to the retval of GetDesktopWindow().
-    # pid is not effective until specifying it.
-    
-    # find with regexp:
-    # it must set the value by qr// style.
-    my $window = find_window( classname  => qr/^ExploreWClass$/
-                            , filename   => qr/^C:\\WINDOWS\\.*/
-                            , basename   => qr/^Explorer.EXE$/
-                            , windowtext => qr/^C:\\$/ );
-    
-    # the retval is an object.
-    # the read-only accessor are as follows:
-    $window->hwnd;
+    $window->basename;
+    $window->filename;
     $window->windowtext;
     $window->classname;
+    $window->hwnd;
     $window->pid;
-    $window->filename;
-    $winfow->basename;
-    
-    # call find_windows() to return multiple values.
-    my @windows = find_windows( classname => 'MSPaintApp'
-                              , filename  => 'C:\\WINDOWS\\system32\\mspaint.exe'
-                              , basename  => 'mspaint.exe'
-                              , windowtext => qr/^.+$/ );
-    
-    # set $Win32::FindWindow::ENCODING with wide characters search
-    # ex. Japanese UTF-8
-    use utf8;
-    use encoding 'utf8', STDOUT => 'cp932';
-    $Win32::FindWindow::ENCODING = 'cp932';
-    
-    my @windows = find_windows( classname => qr/スタート/ );
 
 =head1 DESCRIPTION
 
 This module provides routines for finding windows on Win32 systems.
 
 
-=head1 METHODS
-
-=head2 read-only accessors
+=head1 FUNCTIONS
 
 =over
 
-=item hwnd()
+=item find_window()
 
-=item windowtext()
+Returns C<Win32::FindWindow> objects by supplied search parameters.
+The parameters are as follows:
 
-=item classname()
+    basename
+    filename
+    windowtext
+    classname
+    hwnd
+    pid
 
-=item pid()
+C<SCALAR> or C<Regexp> value can be specified as search conditions for finding window.
+Like this:
 
-=item filename()
+    $window = find_window( basename => 'wmplayer.exe' );
+    $window = find_window( windowtext => qr/^Windows Media/ );
 
-=item basename()
+=item find_windows()
+
+Same as C<find_window()> except it returns multiple objects as C<ARRAY>.
+
+    @windows = find_windows( basename   => 'mspaint.exe'
+                           , filename   => 'C:\\WINDOWS\\system32\\mspaint.exe'
+                           , windowtext => qr/^.+$/
+                           , classname  => 'MSPaintApp' );
 
 =back
+
+=head1 METHODS
+
+    $window = find_window( ... );
+    
+    # accessors (read-only)
+    $window->basename;
+    $window->filename;
+    $window->windowtext;
+    $window->classname;
+    $window->hwnd;
+    $window->pid;
+
+Accessor methods is being offered as shown in the above. These are read-only.
+
+=head1 GLOBAL VARIABLES
+
+=over
+
+=item $ENCODING
+
+    # how to use regexp with wide characters
+    # e.g. pattern matching the character that starts by Japanese `スタート'
+    use Win32::FindWindow qw/find_windows/;
+    use utf8;
+    use encoding 'utf8', STDOUT => 'cp932';
+    $Win32::FindWindow::ENCODING = 'cp932';
+    @windows = find_windows( classname  => 'Button'
+                           , windowtext => qr/^スタート/ );
+
+A string value that shows system encodings. Defaults to 'cp1252'.
+Set your system's codepage string that module C<Encode> supported.
+Because this module uses C<Encode::decode()> internally.
+
+=item $LENGTH_MAX
+
+A numerical value that shows length of temporary string buffer. Defaults to 1024.
+This is used by C<GetClassName()>, C<EnumProcessModules()>, C<GetModuleFileNameEx()> and C<GetModuleBaseName()>.
+
+=back
+
+=head1 SEE ALSO
+
+L<Win32::API>, L<Win32::API::Callback>, L<Class::Accessor::Fast>, L<Encode>,
+How To Enumerate Windows Using the WIN32 API: L<http://support.microsoft.com/kb/183009>
 
 =head1 AUTHOR
 
