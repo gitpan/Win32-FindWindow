@@ -13,7 +13,7 @@ __PACKAGE__->mk_ro_accessors(qw(hwnd windowtext classname pid filename basename)
 use constant PROCESS_VM_READ           => 0x0010;
 use constant PROCESS_QUERY_INFORMATION => 0x0400;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 our @EXPORT = qw();
 our @EXPORT_OK = qw(find_window find_windows);
